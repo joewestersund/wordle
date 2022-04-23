@@ -1,5 +1,6 @@
 import numpy as np
-import letters_included as lp
+import wordle as w
+import random
 
 class WordList:
 
@@ -12,38 +13,29 @@ class WordList:
             return letter_index
 
     def __init__(self, num_words, num_characters):
-        self.word_list = np.zeros((5, 26, num_words), dtype=np.bool)
-        self.current_word_index = 0
         self.num_characters = num_characters
+        self.word_array = np.zeros((5, 26, num_words), dtype=np.bool)
         self.words = np.empty(num_words, dtype=np.dtype(f'S{num_characters}'))
+        self.reset()
+
+    def reset(self):
+        self.current_word_index = 0
+        self.matching_indices = []
 
     def add_word(self, word):
         if len(word) == self.num_characters:
             for i in range(self.num_characters):
                 letter = word[i]
-                self.word_list[i, WordList.character_index(letter), self.current_word_index] = 1
+                self.word_array[i, WordList.character_index(letter), self.current_word_index] = 1
             self.words[self.current_word_index] = word
             self.current_word_index += 1
         else:
             raise Exception(f'word {word} did not have 5 characters.')
 
-    def words_matching_pattern(self, pattern, letters_included, letters_not_included):
+    def apply_filters(self, pattern, letters_included, letters_not_included):
         if len(pattern) != self.num_characters:
             raise Exception(f'pattern {pattern} did not have {self.num_characters} characters.')
-        # check for words that match pattern
-        # pattern_array = np.zeros((self.num_characters, 26), dtype=np.bool)
-        # for i in range(self.num_characters):
-        #     letter = pattern[i]
-        #     if letter == "*":
-        #         pattern_array[i,:] = np.ones(26, dtype=np.bool)  # all ones, so any letter would match
-        #     else:
-        #         letter_index = WordList.character_index(letter)
-        #         pattern_array[i,letter_index] = 1  # only matching letter would match
-        # pattern_match = np.einsum('ij,ijk->ik',pattern_array,self.word_list)
-        # sum_each_word = np.count_nonzero(pattern_match,axis=0)
-        # matching_words = self.words[sum_each_word == self.num_characters]
 
-        # experiment with new approach from here
         num_criteria = 2
         criteria_array = np.ones((self.num_characters, 26, num_criteria), dtype=np.bool)
 
@@ -72,7 +64,7 @@ class WordList:
             letter_index = WordList.character_index(letter)
             criteria_array[:, letter_index, criteria_index] = 1 # this letter should not be in any position
 
-        criteria_match = np.einsum('ijk,ijm->m', criteria_array, self.word_list)
+        criteria_match = np.einsum('ijk,ijm->m', criteria_array, self.word_array)
 
         # check for letters that must be included somewhere
         criteria_array2 = np.zeros((self.num_characters, 26), dtype=np.int)
@@ -81,11 +73,30 @@ class WordList:
             letter_index = WordList.character_index(letter)
             criteria_array2[:, letter_index] = 1  # this letter should not be in this position
 
-        criteria_match2 = np.einsum('ij,ijm->m', criteria_array2, self.word_list)
+        criteria_match2 = np.einsum('ij,ijm->m', criteria_array2, self.word_array)
 
         matching_indices = (criteria_match == 0) & (criteria_match2 >= num_letters_must_be_included)
-        matching_words = self.words[matching_indices]
+        self.matching_indices = matching_indices # save this for future questions about this list
 
+    def get_matching_words(self):
+        matching_words = self.words[self.matching_indices]
         return matching_words.astype('U13')  # convert from byte array to strings
 
-
+    def get_suggested_word(self, suggested_guess_type):
+        if suggested_guess_type == w.SuggestedGuessType.RANDOM:
+            matching_words = self.words[self.matching_indices]
+            num_choices = len(matching_words)
+            random_index = random.randint(0, num_choices)
+            return matching_words[random_index]
+        else:
+            matching_rows_of_word_array = self.word_array[self.matching_indices]
+            frequencies = np.average(matching_rows_of_word_array, axis=2)
+            frequency_match = np.einsum('ij,ijm->m', frequencies, self.word_array)
+            if suggested_guess_type == w.SuggestedGuessType.LOWEST_FREQUENCY:
+                index = np.argmin(frequency_match)
+                return self.words[index]
+            elif suggested_guess_type == w.SuggestedGuessType.HIGHEST_FREQUENCY:
+                index = np.argmax(frequency_match)
+                return self.words[index]
+            else:
+                raise Exception(f'Suggested guess type {self.suggested_guess_type} was not recognized.')

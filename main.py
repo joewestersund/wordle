@@ -6,14 +6,15 @@ def main():
     word_length = 5
     words = rd.read_word_file('wordlist.10000.txt', word_length)
 
-    g = w.Wordle.LETTER_RESULT_GRAY
-    y = w.Wordle.LETTER_RESULT_YELLOW
-    gr = w.Wordle.LETTER_RESULT_GREEN
+    g = w.LetterResultCode.GRAY
+    y = w.LetterResultCode.YELLOW
+    gr = w.LetterResultCode.GREEN
 
-    wordle = w.Wordle(words)
+    guess_type = w.SuggestedGuessType.RANDOM
+    wordle = w.Wordle(words, guess_type)
 
     success = False
-    suggested_guess = 'trans'
+    suggested_guess = 'trans' # wordle.get_suggested_guess() # 'trans'
     for i in range(6):
         next_guess, result = get_guess_and_result(suggested_guess)
         if result == [gr, gr, gr, gr, gr]:
@@ -21,7 +22,7 @@ def main():
             success = True
             break
         wordle.record_guess(next_guess, result)
-        suggested_guess, matching_words = wordle.get_remaining_words()
+        suggested_guess, matching_words = wordle.get_matching_words()
     if not success:
         print(f'Too bad, you didn''t get it')
 

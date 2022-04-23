@@ -1,25 +1,33 @@
 import letters_included as li
-import word_list
+import word_list as wl
+
+class LetterResultCode:
+    GRAY = 0
+    YELLOW = 1
+    GREEN = 2
+
+class SuggestedGuessType:
+    RANDOM = 0
+    HIGHEST_FREQUENCY = 1
+    LOWEST_FREQUENCY = 2
 
 class Wordle:
     WORD_LENGTH = 5
 
-    LETTER_RESULT_GRAY = 0
-    LETTER_RESULT_YELLOW = 1
-    LETTER_RESULT_GREEN = 2
-
-    def __init__(self, words):
-        self.reset()
-        self.word_list = word_list.WordList(len(words), Wordle.WORD_LENGTH)
+    def __init__(self, words, suggested_guess_type=SuggestedGuessType.HIGHEST_FREQUENCY):
+        self.word_list = wl.WordList(len(words), Wordle.WORD_LENGTH)
         for word in words:
             self.word_list.add_word(word)
+        self.reset(suggested_guess_type)
 
-    def reset(self):
+    def reset(self, suggested_guess_type=SuggestedGuessType.HIGHEST_FREQUENCY):
         self.guesses = []
         self.results = []
         self.letters_not_included = set()
         self.letters_included = li.LettersIncluded()
         self.pattern = list('*****')
+        self.word_list.reset()
+        self.suggested_guess_type = suggested_guess_type
 
     def record_guess(self, guess, result_each_letter):
         guess_str = guess
@@ -28,17 +36,22 @@ class Wordle:
         for i in range(5):
             letter = guess_str[i]
             result = result_each_letter[i]
-            if result == Wordle.LETTER_RESULT_GREEN:
+            if result == LetterResultCode.GREEN:
                 self.pattern[i] = letter
-            elif result == Wordle.LETTER_RESULT_YELLOW:
+            elif result == LetterResultCode.YELLOW:
                 self.letters_included.add(letter, i)
-            elif result == Wordle.LETTER_RESULT_GRAY:
+            elif result == LetterResultCode.GRAY:
                 self.letters_not_included.add(letter)
 
-    def get_remaining_words(self):
-        matching_words = self.word_list.words_matching_pattern(self.pattern, self.letters_included, self.letters_not_included)
+    def get_matching_words(self):
+        self.word_list.apply_filters(self.pattern, self.letters_included, self.letters_not_included)
+        matching_words = self.word_list.get_matching_words()
         if len(matching_words) == 0:
             raise Exception(f'No words matched pattern {self.pattern} and matched the other criteria.')
         print(f'{len(matching_words)} words matched pattern {self.pattern}. The first word was {matching_words[0]}')
-        suggested_guess = matching_words[0]
+        self.matching_words = matching_words
+        suggested_guess = self.get_suggested_guess()
         return suggested_guess, matching_words
+
+    def get_suggested_guess(self):
+        return self.word_list.get_suggested_word(self.suggested_guess_type)
