@@ -86,17 +86,17 @@ class WordList:
         if suggested_guess_type == w.SuggestedGuessType.RANDOM:
             matching_words = self.words[self.matching_indices]
             num_choices = len(matching_words)
-            random_index = random.randint(0, num_choices)
-            return matching_words[random_index]
+            random_index = random.randint(0, num_choices-1)
+            return matching_words[random_index].astype('U13')
         else:
             matching_rows_of_word_array = self.word_array[self.matching_indices]
             frequencies = np.average(matching_rows_of_word_array, axis=2)
             frequency_match = np.einsum('ij,ijm->m', frequencies, self.word_array)
             if suggested_guess_type == w.SuggestedGuessType.LOWEST_FREQUENCY:
                 index = np.argmin(frequency_match)
-                return self.words[index]
+                return self.words[index].astype('U13')
             elif suggested_guess_type == w.SuggestedGuessType.HIGHEST_FREQUENCY:
                 index = np.argmax(frequency_match)
-                return self.words[index]
+                return self.words[index].astype('U13')
             else:
                 raise Exception(f'Suggested guess type {self.suggested_guess_type} was not recognized.')
