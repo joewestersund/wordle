@@ -4,27 +4,33 @@ import wordle as w
 
 def main():
     word_length = 5
-    words = rd.read_word_file('wordlist.10000.txt', word_length)
+    #words = rd.read_word_file('wordlist.10000.txt', word_length)
+    words = rd.read_word_file('wlist_match10.txt', word_length)
 
     g = w.LetterResultCode.GRAY
     y = w.LetterResultCode.YELLOW
     gr = w.LetterResultCode.GREEN
 
-    guess_type = w.SuggestedGuessType.RANDOM
+    #guess_type = w.SuggestedGuessType.RANDOM
+    guess_type = w.SuggestedGuessType.HIGHEST_FREQUENCY
     wordle = w.Wordle(words, guess_type)
 
-    success = False
-    suggested_guess = 'trans' # wordle.get_suggested_guess() # 'trans'
+    # suggested_guess = 'trans'
+    suggested_guess = wordle.get_suggested_guess() # 'trans'
     for i in range(6):
         next_guess, result = get_guess_and_result(suggested_guess)
         if result == [gr, gr, gr, gr, gr]:
             print(f'The word was {next_guess}, congratulations, you got it in {i+1} guesses!')
-            success = True
             break
         wordle.record_guess(next_guess, result)
-        suggested_guess, matching_words = wordle.get_matching_words()
-    if not success:
-        print(f'Too bad, you didn''t get it')
+        matching_words = wordle.get_matching_words()
+        if len(matching_words) > 0:
+            indices_to_show = min(10, len(matching_words))
+            print(f'There were {len(matching_words)} matching values. Some examples: {",".join(matching_words[:indices_to_show])}')
+        else:
+            print(f'No words matched those filter criteria in our word list. Good luck!')
+            break
+        suggested_guess = wordle.get_suggested_guess()
 
 def get_guess_and_result(suggested_guess):
     print(f'suggested guess: {suggested_guess}')

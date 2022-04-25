@@ -28,6 +28,7 @@ class Wordle:
         self.pattern = list('*****')
         self.word_list.reset()
         self.suggested_guess_type = suggested_guess_type
+        self.filters_applied = False
 
     def record_guess(self, guess, result_each_letter):
         guess_str = guess
@@ -41,17 +42,22 @@ class Wordle:
             elif result == LetterResultCode.YELLOW:
                 self.letters_included.add(letter, i)
             elif result == LetterResultCode.GRAY:
-                self.letters_not_included.add(letter)
+                if not letter in self.letters_included.letters:
+                    #if a letter is repeated in the guess but only in the real word once,
+                    # it will be yellow/green in the leftmost position, and gray in the other position.
+                    # this isn't handled yet.
+                    self.letters_not_included.add(letter)
+        self.filters_applied = False
+
+    def apply_filters(self):
+        if not self.filters_applied:
+            self.word_list.apply_filters(self.pattern, self.letters_included, self.letters_not_included)
+            self.filters_applied = True
 
     def get_matching_words(self):
-        self.word_list.apply_filters(self.pattern, self.letters_included, self.letters_not_included)
-        matching_words = self.word_list.get_matching_words()
-        if len(matching_words) == 0:
-            raise Exception(f'No words matched pattern {self.pattern} and matched the other criteria.')
-        print(f'{len(matching_words)} words matched pattern {self.pattern}. The first word was {matching_words[0]}')
-        self.matching_words = matching_words
-        suggested_guess = self.get_suggested_guess()
-        return suggested_guess, matching_words
+        self.apply_filters()
+        return self.word_list.get_matching_words()
 
     def get_suggested_guess(self):
+        self.apply_filters()
         return self.word_list.get_suggested_word(self.suggested_guess_type)

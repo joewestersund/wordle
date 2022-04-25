@@ -89,8 +89,8 @@ class WordList:
             random_index = random.randint(0, num_choices-1)
             return matching_words[random_index].astype('U13')
         else:
-            matching_rows_of_word_array = self.word_array[self.matching_indices]
-            frequencies = np.average(matching_rows_of_word_array, axis=2)
+            matching_rows_of_word_array = self.word_array[:, :, self.matching_indices]
+            frequencies = np.nanmean(matching_rows_of_word_array, axis=2)
             frequency_match = np.einsum('ij,ijm->m', frequencies, self.word_array)
             if suggested_guess_type == w.SuggestedGuessType.LOWEST_FREQUENCY:
                 index = np.argmin(frequency_match)

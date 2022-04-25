@@ -7,7 +7,7 @@ class WordleGame:
         HARD = 1
 
     def __init__(self, word, game_mode=GameMode.REGULAR):
-        self.word == word
+        self.word = word
         self.game_mode = game_mode
 
     def get_result(self,guess):

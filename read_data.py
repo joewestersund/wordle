@@ -1,3 +1,4 @@
+import re
 from os.path import abspath, expanduser
 
 def get_file_path(filename):
@@ -11,8 +12,8 @@ def read_word_file(filename, word_length):
     print('Opening file', filepath)
     with open(filepath, 'r') as fh:
         for line in fh:
-            line_str = line.strip() # remove whitespace
-            if len(line_str) == word_length:
+            line_str = line.strip().lower() # remove whitespace & make lower case
+            if len(line_str) == word_length and bool(re.fullmatch('^[a-z]{5}',line_str)):  # 5 lowercase characters only
                 file_contents.append(line_str)
         fh.close()
     print('file closed')
