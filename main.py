@@ -29,7 +29,7 @@ def main():
         game = cg.ConsoleGame()
         game.play_game(wordle)
     elif game_mode == GameMode.SUGGESTED_GUESS_TESTING:
-        NUM_REPETITIONS = 1000
+        NUM_REPETITIONS = 1000 #00
         print(f'Starting suggested guess testing mode with {NUM_REPETITIONS} trials on each suggested guess type.')
         NUM_TURNS_ALLOWED = 6
         guess_types = {"random":w.SuggestedGuessType.RANDOM, "highest frequency":w.SuggestedGuessType.HIGHEST_FREQUENCY,
@@ -49,6 +49,8 @@ def main():
                 while not success:
                     num_turns_this_repetition[i] += 1
                     suggested_guesses = wordle.get_suggested_guesses(1)
+                    if len(suggested_guesses) == 0:
+                        raise Exception(f'Error, there appear to be no words in the dictionary meeting these criteria.')
                     guess = suggested_guesses[0]
                     success, result = game.get_result(guess)
                     wordle.record_guess(guess, result)
