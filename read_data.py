@@ -13,7 +13,8 @@ def read_word_file(filename, word_length):
     with open(filepath, 'r') as fh:
         for line in fh:
             line_str = line.strip().lower() # remove whitespace & make lower case
-            if len(line_str) == word_length and bool(re.fullmatch('^[a-z]{5}',line_str)):  # 5 lowercase characters only
+            #if len(line_str) == word_length and
+            if bool(re.fullmatch('^[a-z]{5}',line_str)):  # 5 lowercase characters only
                 file_contents.append(line_str)
         fh.close()
     print('file closed')

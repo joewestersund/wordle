@@ -82,21 +82,23 @@ class WordList:
         matching_words = self.words[self.matching_indices]
         return matching_words.astype('U13')  # convert from byte array to strings
 
-    def get_suggested_word(self, suggested_guess_type):
+    def get_suggested_guesses(self, suggested_guess_type, num_guesses):
+        matching_words = self.words[self.matching_indices]
         if suggested_guess_type == w.SuggestedGuessType.RANDOM:
-            matching_words = self.words[self.matching_indices]
-            num_choices = len(matching_words)
-            random_index = random.randint(0, num_choices-1)
-            return matching_words[random_index].astype('U13')
+            num_guesses_to_return = min(len(matching_words), num_guesses)
+            random_words = np.random.choice(matching_words, num_guesses_to_return)
+            return random_words.astype('U13')
         else:
             matching_rows_of_word_array = self.word_array[:, :, self.matching_indices]
+            num_guesses_to_return = min(len(matching_rows_of_word_array), num_guesses)
             frequencies = np.nanmean(matching_rows_of_word_array, axis=2)
-            frequency_match = np.einsum('ij,ijm->m', frequencies, self.word_array)
+            frequency_match = np.einsum('ij,ijm->m', frequencies, matching_rows_of_word_array)
+            indices = np.argsort(frequency_match)
             if suggested_guess_type == w.SuggestedGuessType.LOWEST_FREQUENCY:
-                index = np.argmin(frequency_match)
-                return self.words[index].astype('U13')
+                selected_indices = indices[:num_guesses_to_return] # first x elements
+                return matching_words[selected_indices].astype('U13')
             elif suggested_guess_type == w.SuggestedGuessType.HIGHEST_FREQUENCY:
-                index = np.argmax(frequency_match)
-                return self.words[index].astype('U13')
+                selected_indices = indices[-num_guesses_to_return:]  # last x elements
+                return matching_words[selected_indices].astype('U13')
             else:
                 raise Exception(f'Suggested guess type {self.suggested_guess_type} was not recognized.')

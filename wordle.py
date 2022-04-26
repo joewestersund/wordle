@@ -58,6 +58,6 @@ class Wordle:
         self.apply_filters()
         return self.word_list.get_matching_words()
 
-    def get_suggested_guess(self):
+    def get_suggested_guesses(self, num_guesses):
         self.apply_filters()
-        return self.word_list.get_suggested_word(self.suggested_guess_type)
+        return self.word_list.get_suggested_guesses(self.suggested_guess_type, num_guesses)
