@@ -58,7 +58,7 @@ def main():
             std_error = np.std(num_turns_this_repetition, ddof=1) / np.sqrt(NUM_REPETITIONS)
             game_result["turns needed to guess word"] = f'{avg} +/- {std_error}'
             num_failures = len(num_turns_this_repetition[num_turns_this_repetition > NUM_TURNS_ALLOWED])
-            game_result["num failures"] = f'{num_failures} / {NUM_REPETITIONS} ({100 * num_failures / NUM_REPETITIONS}%'
+            game_result["num failures"] = f'{num_failures} / {NUM_REPETITIONS} ({100 * num_failures / NUM_REPETITIONS}%)'
             game_result["min turns needed"] = np.min(num_turns_this_repetition)
             game_result["max turns needed"] = np.max(num_turns_this_repetition)
             print(game_result)
