@@ -5,8 +5,9 @@ class ConsoleGame:
     def play_game(self, wordle):
         gr = w.LetterResultCode.GREEN
 
-        suggested_guesses = wordle.get_suggested_guesses(10)
+        suggested_guesses, guess_scores = wordle.get_suggested_guesses(10)
         print(f'Suggested guesses: {", ".join(suggested_guesses)}')
+        print(f'Suggested guess scores: {guess_scores}')
         for i in range(6):
             next_guess, result = self.get_guess_and_result(suggested_guesses[0])
             if result == [gr, gr, gr, gr, gr]:
@@ -19,8 +20,9 @@ class ConsoleGame:
             else:
                 print(f'No words matched those filter criteria in our word list. Good luck!')
                 break
-            suggested_guesses = wordle.get_suggested_guesses(10)
+            suggested_guesses, guess_scores = wordle.get_suggested_guesses(10)
             print(f'Suggested guesses: {", ".join(suggested_guesses)}')
+            print(f'Suggested guess scores: {guess_scores}')
 
 
     def get_guess_and_result(self, suggested_guess):

@@ -57,18 +57,23 @@ class WordList:
             frequency_sum_yellow = np.einsum('j,jm->m', frequencies_yellow, word_contains_letter)
 
             if suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN_LOW:
-                indices = np.argsort(frequency_sum_green)
-                selected_indices = indices[:num_guesses_to_return] # first x elements
-                return matching_words[selected_indices].astype('U13')
-
+                scores = -1 * frequency_sum_green
             if suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN:
-                indices = np.argsort(frequency_sum_green)
+                scores = frequency_sum_green
             elif suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_YELLOW:
-                indices = np.argsort(frequency_sum_yellow)
+                scores = frequency_sum_yellow
             elif suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW:
-                indices = np.argsort(frequency_sum_green + frequency_sum_yellow)
+                scores = frequency_sum_green + frequency_sum_yellow
             else:
                 raise Exception(f'Suggested guess type {self.suggested_guess_type} was not recognized.')
 
+            indices = np.argsort(scores)
             selected_indices = np.flip(indices[-num_guesses_to_return:])  # last x elements, reordered so highest rated is first
-            return matching_words[selected_indices].astype('U13')
+            suggested_guesses = matching_words[selected_indices].astype('U13')
+            highest_word_score = scores[indices][-1]
+            lowest_word_score = scores[indices][0]
+            suggested_guess_scores = self.convert_to_percentage_scale(scores[selected_indices], highest_word_score, lowest_word_score)
+            return suggested_guesses, suggested_guess_scores
+
+    def convert_to_percentage_scale(self, scores, high, low):
+        return 100 * (scores - low) / (high - low)

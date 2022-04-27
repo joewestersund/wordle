@@ -11,8 +11,8 @@ class GameMode:
     SUGGESTED_GUESS_TESTING = 2
 
 def main():
-    #game_mode = GameMode.CONSOLE
-    game_mode = GameMode.SUGGESTED_GUESS_TESTING
+    game_mode = GameMode.CONSOLE
+    #game_mode = GameMode.SUGGESTED_GUESS_TESTING
 
     word_length = 5
     words = rd.read_word_file('wlist_match10.txt', word_length)
@@ -48,7 +48,7 @@ def main():
                 success = False
                 while not success:
                     num_turns_this_repetition[i, j] += 1
-                    suggested_guesses = wordle.get_suggested_guesses(1)
+                    suggested_guesses, guess_scores = wordle.get_suggested_guesses(1)
                     if len(suggested_guesses) == 0:
                         raise Exception(f'Error, there appear to be no words in the dictionary meeting these criteria.')
                     guess = suggested_guesses[0]
