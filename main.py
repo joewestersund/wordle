@@ -23,8 +23,7 @@ def main():
 
     if game_mode == GameMode.CONSOLE:
         print(f'Starting game in console mode.')
-        #guess_type = w.SuggestedGuessType.RANDOM
-        guess_type = w.SuggestedGuessType.EXPECTED_VALUE_GREEN
+        guess_type = w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW
         wordle = w.Wordle(words, guess_type)
         game = cg.ConsoleGame()
         game.play_game(wordle)
@@ -34,7 +33,7 @@ def main():
         NUM_TURNS_ALLOWED = 6
         guess_types = [{"guess_type_name":"random", "guess_type":w.SuggestedGuessType.RANDOM},
                        {"guess_type_name":"EV green", "guess_type":w.SuggestedGuessType.EXPECTED_VALUE_GREEN},
-                       #{"guess_type_name":"EV yellow", "guess_type":w.SuggestedGuessType.EXPECTED_VALUE_YELLOW},
+                       {"guess_type_name":"EV yellow", "guess_type":w.SuggestedGuessType.EXPECTED_VALUE_YELLOW},
                        {"guess_type_name":"EV green + yellow", "guess_type":w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW}]
         wordle = w.Wordle(words, guess_types[0])  # initialize
         num_guess_types = len(guess_types)

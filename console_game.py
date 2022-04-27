@@ -5,7 +5,8 @@ class ConsoleGame:
     def play_game(self, wordle):
         gr = w.LetterResultCode.GREEN
 
-        suggested_guesses = wordle.get_suggested_guesses(1)
+        suggested_guesses = wordle.get_suggested_guesses(10)
+        print(f'Suggested guesses: {", ".join(suggested_guesses)}')
         for i in range(6):
             next_guess, result = self.get_guess_and_result(suggested_guesses[0])
             if result == [gr, gr, gr, gr, gr]:
