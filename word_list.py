@@ -45,7 +45,8 @@ class WordList:
         if suggested_guess_type == w.SuggestedGuessType.RANDOM:
             num_guesses_to_return = min(len(matching_words), num_guesses)
             random_words = np.random.choice(matching_words, num_guesses_to_return)
-            return random_words.astype('U13')
+            scores = [None] * num_guesses
+            return random_words.astype('U13'), scores
         else:
             matching_rows_of_word_array = self.word_array[:, :, self.matching_indices]
             num_guesses_to_return = min(len(matching_rows_of_word_array), num_guesses)
@@ -59,11 +60,15 @@ class WordList:
             if suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN_LOW:
                 scores = -1 * frequency_sum_green
             if suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN:
-                scores = frequency_sum_green
+                scores = 1 * frequency_sum_green + 0 * frequency_sum_yellow
+            elif suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW_25:
+                scores = 0.75 * frequency_sum_green + 0.25 * frequency_sum_yellow
+            elif suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW_50:
+                scores = 0.5 * frequency_sum_green + 0.5 * frequency_sum_yellow
+            elif suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW_75:
+                scores = 0.25 * frequency_sum_green + 0.75 * frequency_sum_yellow
             elif suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_YELLOW:
-                scores = frequency_sum_yellow
-            elif suggested_guess_type == w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW:
-                scores = frequency_sum_green + frequency_sum_yellow
+                scores = 0 * frequency_sum_green + 1 * frequency_sum_yellow
             else:
                 raise Exception(f'Suggested guess type {self.suggested_guess_type} was not recognized.')
 
@@ -76,4 +81,7 @@ class WordList:
             return suggested_guesses, suggested_guess_scores
 
     def convert_to_percentage_scale(self, scores, high, low):
-        return 100 * (scores - low) / (high - low)
+        if high == low:
+            return 100 * scores / scores
+        else:
+            return 100 * (scores - low) / (high - low)
