@@ -5,15 +5,18 @@ import read_data as rd
 import wordle as w
 import wordle_game as wg
 import console_game as cg
+import wordle_gui as gui
 import random
 
 class GameMode:
     CONSOLE = 1
     SUGGESTED_GUESS_TESTING = 2
+    GUI = 3
 
 def main():
     #game_mode = GameMode.CONSOLE
-    game_mode = GameMode.SUGGESTED_GUESS_TESTING
+    #game_mode = GameMode.SUGGESTED_GUESS_TESTING
+    game_mode = GameMode.GUI
 
     word_length = 5
     words = rd.read_word_file('wlist_match10.txt', word_length)
@@ -28,10 +31,14 @@ def main():
         wordle = w.Wordle(words, guess_type)
         game = cg.ConsoleGame()
         game.play_game(wordle)
+    elif game_mode == GameMode.GUI:
+        guess_type = w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW_50
+        wordle = w.Wordle(words, guess_type)
+        game = gui.WordleGUI(wordle)
+        game.show_form()
     elif game_mode == GameMode.SUGGESTED_GUESS_TESTING:
         NUM_REPETITIONS = 1000
         print(f'Starting suggested guess testing mode with {NUM_REPETITIONS} trials on each suggested guess type.')
-        NUM_TURNS_ALLOWED = 6
         guess_types = [{"guess_type_name":"random", "guess_type":w.SuggestedGuessType.RANDOM},
                        {"guess_type_name":"EV green", "guess_type":w.SuggestedGuessType.EXPECTED_VALUE_GREEN},
                        {"guess_type_name": "EV green75 yellow25", "guess_type": w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW_25},
@@ -58,7 +65,7 @@ def main():
                     guess = suggested_guesses[0]
                     success, result = game.get_result(guess)
                     wordle.record_guess(guess, result)
-                if num_turns_this_repetition[i, j] > NUM_TURNS_ALLOWED:
+                if num_turns_this_repetition[i, j] > w.Wordle.NUM_TURNS_ALLOWED:
                     failures[j].append(random_word)
         averages = np.mean(num_turns_this_repetition, axis=0)
         sorted_indices = np.argsort(averages)
@@ -71,7 +78,7 @@ def main():
             avg = np.mean(num_turns)
             std_error = np.std(num_turns, ddof=1) / np.sqrt(NUM_REPETITIONS)
             game_result["turns needed to guess word"] = f'{avg} +/- {std_error}'
-            num_failures = len(num_turns[num_turns > NUM_TURNS_ALLOWED])
+            num_failures = len(num_turns[num_turns > w.Wordle.NUM_TURNS_ALLOWED])
             game_result["num failures"] = f'{num_failures} / {NUM_REPETITIONS} ({100 * num_failures / NUM_REPETITIONS}%)'
             game_result["min turns needed"] = np.min(num_turns)
             game_result["max turns needed"] = np.max(num_turns)

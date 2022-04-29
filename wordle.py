@@ -19,6 +19,7 @@ class SuggestedGuessType:
 class Wordle:
     WORD_LENGTH = 5
     NUM_LETTERS = 26
+    NUM_TURNS_ALLOWED = 6
 
     @staticmethod
     def character_index(char):
