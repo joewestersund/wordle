@@ -46,13 +46,15 @@ class WordleGUI:
         else:
             self.wordle.record_guess(guess, result_array)
             suggested_guesses, scores = self.wordle.get_suggested_guesses(self.SUGGESTED_GUESSES_TO_SHOW)
-            self.set_instructions("",suggested_guesses, scores, False)
+            matching_words = self.wordle.get_matching_words()
+            self.set_instructions(f'{len(matching_words)} matching words remain.',suggested_guesses, scores, False)
             new_row = current_row + 1
             self.row = new_row
             self.set_tb_enabled(current_row)
             self.set_buttons_enabled(current_row)
             self.set_tb_enabled(new_row)
             self.set_buttons_enabled(new_row)
+            self.hide_buttons(new_row)
             self.set_focus(new_row,0)
 
     def set_buttons_enabled(self, row):
@@ -66,9 +68,11 @@ class WordleGUI:
         else:
             self.buttons[row].config(state='disabled') #grid_forget()  # hide
 
-    def hide_buttons(self):
+    def hide_buttons(self, except_for_row):
+        self.buttons[except_for_row].grid(row=except_for_row+2, column=w.Wordle.WORD_LENGTH+1)
         for row in range(self.wordle.NUM_TURNS_ALLOWED):
-            self.buttons[row].grid_forget()  # hide
+            if row != except_for_row:
+                self.buttons[row].grid_forget()  # hide
 
     def set_tb_enabled(self, row):
         for col in range(self.wordle.WORD_LENGTH):
@@ -109,12 +113,12 @@ class WordleGUI:
 
     def set_instructions(self, message, suggested_guesses=None, suggested_guess_scores=None, game_complete=False):
         str = ''
+        if len(message) > 0:
+            str = f'{message}\n'
         if game_complete:
-            str = f'{message} The game is complete.'
+            str += f'The game is complete.'
         elif not suggested_guesses is None:
             str += f'Suggested guesses: {suggested_guesses}\nSuggested guess scores: {suggested_guess_scores}'
-        else:
-            str = message
         self.instructions.set(str)
 
     def get_style_name(self, color_index):
@@ -129,10 +133,14 @@ class WordleGUI:
         root.resizable(0, 0)
 
         mainframe = ttk.Frame(root, padding="10 10 10 10")
-        mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        mainframe.pack()
 
         self.instructions = StringVar(name="instructions")
-        ttk.Label(mainframe, textvariable=self.instructions).grid(column=1, columnspan=self.wordle.WORD_LENGTH,sticky=W)
+        inst = ttk.Label(mainframe, textvariable=self.instructions)
+        inst.pack()
+
+        game_frame = ttk.Frame(mainframe)
+        game_frame.pack()
 
         self.styles = [None for x in range(len(self.COLORS))]
         for i in range(len(self.COLORS)):
@@ -148,25 +156,25 @@ class WordleGUI:
         for row in range(self.wordle.NUM_TURNS_ALLOWED):
             for col in range(self.wordle.WORD_LENGTH):
                 tb_text = StringVar()
-                tb = ttk.Entry(mainframe, width=2, textvariable=tb_text, font='Georgia 30 bold')
+                tb = ttk.Entry(game_frame, width=2, textvariable=tb_text, font='Georgia 30 bold')
                 tb.grid(column=col+1, row=row+2, sticky=W)
                 tb.config(state='disabled', justify='center')
                 tb.bind("<1>", lambda event, row=row, col=col, tb=tb: self.tb_click(row, col, tb))
                 tb.bind("<KeyRelease>", lambda event, row=row, col=col: self.handle_key_release(row, col))
                 self.text_boxes[row][col] = tb
                 self.text_box_values[row][col] = tb_text
-            btn = ttk.Button(mainframe, text="OK", command=self.ok_click)
+            btn = ttk.Button(game_frame, text="OK", command=self.ok_click)
             btn.config(state='disabled')
             self.buttons[row] = btn
             btn.grid(column=self.wordle.WORD_LENGTH+1, row=row+2, sticky=E)
 
         row = self.wordle.NUM_TURNS_ALLOWED + 2
-        button_frame = Frame(mainframe)
+        button_frame = Frame(game_frame)
         button_frame.grid(column=self.wordle.WORD_LENGTH+1, row=row, sticky=E)
         ttk.Button(button_frame, text="Exit", command=exit).grid(column=2, row=1, sticky=E)
 
         # add some padding around each element in mainframe
-        for child in mainframe.winfo_children():
+        for child in game_frame.winfo_children():
             child.grid_configure(padx=1, pady=1)
 
         root.bind("<Return>", self.ok_click)
@@ -175,5 +183,7 @@ class WordleGUI:
         self.set_instructions('Please enter your first guess.', suggested_guesses, scores)
         self.set_tb_enabled(0)  # enable the textboxes in the first row
         self.set_focus(0,0)  # set focus on first textbox
+
+        self.hide_buttons(0)
 
         root.mainloop()
