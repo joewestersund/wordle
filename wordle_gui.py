@@ -131,6 +131,7 @@ class WordleGUI:
 
         root.geometry("700x400")
         root.resizable(0, 0)
+        root.configure(background='grey93')
 
         mainframe = ttk.Frame(root, padding="10 10 10 10")
         mainframe.pack()
