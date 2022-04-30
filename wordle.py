@@ -15,7 +15,6 @@ class SuggestedGuessType:
     EXPECTED_VALUE_GREEN_AND_YELLOW_75 = 5
     EXPECTED_VALUE_YELLOW = 6
 
-
 class Wordle:
     WORD_LENGTH = 5
     NUM_LETTERS = 26
