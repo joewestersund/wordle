@@ -125,13 +125,14 @@ class WordleGUI:
         self.root = root
         root.title = "Wordle"
 
-        mainframe = ttk.Frame(root, padding="3 3 12 12")
+        root.geometry("700x400")
+        root.resizable(0, 0)
+
+        mainframe = ttk.Frame(root, padding="10 10 10 10")
         mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=1)
 
         self.instructions = StringVar(name="instructions")
-        ttk.Label(mainframe, textvariable=self.instructions).grid(column=1, columnspan=self.wordle.WORD_LENGTH, sticky=W)
+        ttk.Label(mainframe, textvariable=self.instructions).grid(column=1, columnspan=self.wordle.WORD_LENGTH,sticky=W)
 
         self.styles = [None for x in range(len(self.COLORS))]
         for i in range(len(self.COLORS)):
@@ -157,13 +158,11 @@ class WordleGUI:
             btn = ttk.Button(mainframe, text="OK", command=self.ok_click)
             btn.config(state='disabled')
             self.buttons[row] = btn
-            btn.grid(column=col+1, row=row+2, sticky=E)
+            btn.grid(column=self.wordle.WORD_LENGTH+1, row=row+2, sticky=E)
 
         row = self.wordle.NUM_TURNS_ALLOWED + 2
         button_frame = Frame(mainframe)
-        button_frame.grid(column=1, columnspan=self.wordle.WORD_LENGTH, row=row, sticky=E)
-        #self.ok_button = ttk.Button(button_frame, text="OK", command=self.ok_click, default="active")
-        #self.ok_button.grid(column=1, row=1, sticky=W)
+        button_frame.grid(column=self.wordle.WORD_LENGTH+1, row=row, sticky=E)
         ttk.Button(button_frame, text="Exit", command=exit).grid(column=2, row=1, sticky=E)
 
         # add some padding around each element in mainframe
