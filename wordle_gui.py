@@ -5,7 +5,7 @@ import wordle as w
 import re
 
 class WordleGUI:
-    COLORS = ["Gray", "Yellow", "Green"]
+    COLORS = ["Gray", "Gold2", "Green"]
     SUGGESTED_GUESSES_TO_SHOW = 5
 
     def __init__(self, wordle):
@@ -62,9 +62,9 @@ class WordleGUI:
         is_valid = self.guess_and_result_valid(guess, result_array)
         print(f'is_valid = {is_valid}')
         if is_valid:
-            self.buttons[row].grid()  # show
+            self.buttons[row].config(state='normal')  #grid()  # show
         else:
-            self.buttons[row].grid_forget()  # hide
+            self.buttons[row].config(state='disabled') #grid_forget()  # hide
 
     def hide_buttons(self):
         for row in range(self.wordle.NUM_TURNS_ALLOWED):
@@ -87,8 +87,8 @@ class WordleGUI:
             x, result_code = divmod(self.results[row][col] + 1, len(self.COLORS))
             self.results[row][col] = result_code
 
-            color = self.COLORS[result_code]
-            tb.config(foreground=color) # set text color
+            style_name = self.get_style_name(result_code)
+            tb.config(style=style_name)
 
             self.set_buttons_enabled(row)
 
@@ -117,6 +117,9 @@ class WordleGUI:
             str = message
         self.instructions.set(str)
 
+    def get_style_name(self, color_index):
+        return f'{self.COLORS[color_index]}.TEntry'
+
     def show_form(self):
         root = Tk()
         self.root = root
@@ -129,6 +132,13 @@ class WordleGUI:
 
         self.instructions = StringVar(name="instructions")
         ttk.Label(mainframe, textvariable=self.instructions).grid(column=1, columnspan=self.wordle.WORD_LENGTH, sticky=W)
+
+        self.styles = [None for x in range(len(self.COLORS))]
+        for i in range(len(self.COLORS)):
+            s = ttk.Style()
+            style_name = self.get_style_name(i)
+            s.configure(style_name, background=self.COLORS[i], foreground='white')
+            self.styles[i] = s
 
         self.text_boxes = [[[] for col in range(self.wordle.WORD_LENGTH)] for row in range(self.wordle.NUM_TURNS_ALLOWED)]
         self.text_box_values = [[[] for col in range(self.wordle.WORD_LENGTH)] for row in range(self.wordle.NUM_TURNS_ALLOWED)]
@@ -145,6 +155,7 @@ class WordleGUI:
                 self.text_boxes[row][col] = tb
                 self.text_box_values[row][col] = tb_text
             btn = ttk.Button(mainframe, text="OK", command=self.ok_click)
+            btn.config(state='disabled')
             self.buttons[row] = btn
             btn.grid(column=col+1, row=row+2, sticky=E)
 
@@ -165,6 +176,5 @@ class WordleGUI:
         self.set_instructions('Please enter your first guess.', suggested_guesses, scores)
         self.set_tb_enabled(0)  # enable the textboxes in the first row
         self.set_focus(0,0)  # set focus on first textbox
-        self.hide_buttons()
 
         root.mainloop()
