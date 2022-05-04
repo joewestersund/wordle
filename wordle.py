@@ -14,6 +14,7 @@ class SuggestedGuessType:
     EXPECTED_VALUE_GREEN_AND_YELLOW_50 = 4
     EXPECTED_VALUE_GREEN_AND_YELLOW_75 = 5
     EXPECTED_VALUE_YELLOW = 6
+    ENTROPY = 7
 
 class Wordle:
     WORD_LENGTH = 5
@@ -35,16 +36,12 @@ class Wordle:
         self.reset(suggested_guess_type)
 
     def reset(self, suggested_guess_type=SuggestedGuessType.EXPECTED_VALUE_GREEN):
-        #self.guesses = []
-        #self.results = []
         self.letters_included = li.LettersIncluded()
         self.word_list.reset()
         self.suggested_guess_type = suggested_guess_type
         self.filters_applied = False
 
     def record_guess(self, guess, result_array):
-        #self.guesses.append(guess)
-        #self.results.append(result_array)
         self.letters_included.record_guess(guess, result_array)
         self.filters_applied = False
 

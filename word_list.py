@@ -1,4 +1,8 @@
+import math
+
 import numpy as np
+
+import letters_included
 import wordle as w
 import random
 import letters_included as li
@@ -24,7 +28,7 @@ class WordList:
         else:
             raise Exception(f'word {word} did not have 5 characters.')
 
-    def apply_filters(self, letters_included):
+    def apply_filters(self, letters_included, save_result=True):
         count_each_letter = np.sum(self.word_array, axis = 0)
 
         criteria_by_letter = (count_each_letter == letters_included.copies_of_this_letter) | \
@@ -34,7 +38,9 @@ class WordList:
         criteria_by_position_and_letter = (self.word_array == letters_included.in_this_position) | (letters_included.in_this_position == li.LettersIncluded.VALUE_IF_UNKNOWN)
         criteria_2 = np.all(criteria_by_position_and_letter, axis=(0,1))
         matching_indices = (criteria_1 & criteria_2)
-        self.matching_indices = matching_indices  # save this for future questions about this list
+        if save_result:
+            self.matching_indices = matching_indices  # save this for future questions about this list
+        return matching_indices
 
     def get_matching_words(self):
         matching_words = self.words[self.matching_indices]
@@ -47,6 +53,31 @@ class WordList:
             random_words = np.random.choice(matching_words, num_guesses_to_return)
             scores = [None] * num_guesses
             return random_words.astype('U13'), scores
+        elif suggested_guess_type == w.SuggestedGuessType.ENTROPY:
+            num_possible_results = 3**w.Wordle.WORD_LENGTH
+            num_matching_words = len(matching_words)
+            entropy_sums = np.zeros(num_matching_words, np.float)
+            for word_index in range(num_matching_words):
+                guess = matching_words[word_index]
+                for result_number in num_possible_results:
+                    r = result_number
+                    result_array = [] * w.Wordle.WORD_LENGTH
+                    for i in range(w.Wordle.WORD_LENGTH):
+                        r, result_array[i] = divmod(r, 3)
+                    li = letters_included.LettersIncluded()
+                    li.record_guess(guess, result_array)
+                    matching_indices = self.apply_filters(li, False)
+                    prob = len(matching_indices) / num_matching_words
+                    if prob > 0 and prob < 1:
+                        entropy_sums[word_index] -= prob * math.log2(prob)
+            ordered_indices = np.argsort(entropy_sums)
+            low = entropy_sums[ordered_indices[0]]
+            high = entropy_sums[ordered_indices[-1]]
+            top_indices = ordered_indices[-1 * num_guesses, :]
+            scores = entropy_sums[top_indices]
+            suggested_guess_scores = self.convert_to_percentage_scale(scores, high, low)
+            suggested_guesses = matching_words[top_indices]
+            return suggested_guesses, suggested_guess_scores
         else:
             matching_rows_of_word_array = self.word_array[:, :, self.matching_indices]
             num_guesses_to_return = min(len(matching_rows_of_word_array), num_guesses)

@@ -19,7 +19,8 @@ def main():
     game_mode = GameMode.GUI
 
     word_length = 5
-    words = rd.read_word_file('wlist_match10.txt', word_length)
+    #words = rd.read_word_file('wlist_match10.txt', word_length)
+    words = rd.read_word_file('nyt_word_list.txt', word_length)
 
     g = w.LetterResultCode.GRAY
     y = w.LetterResultCode.YELLOW
@@ -32,7 +33,8 @@ def main():
         game = cg.ConsoleGame()
         game.play_game(wordle)
     elif game_mode == GameMode.GUI:
-        guess_type = w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW_50
+        #guess_type = w.SuggestedGuessType.EXPECTED_VALUE_GREEN_AND_YELLOW_50
+        guess_type = w.SuggestedGuessType.ENTROPY
         wordle = w.Wordle(words, guess_type)
         game = gui.WordleGUI(wordle)
         game.show_form()
