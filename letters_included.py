@@ -17,6 +17,13 @@ class LettersIncluded:
         self.in_this_position = np.empty((w.Wordle.WORD_LENGTH, w.Wordle.NUM_LETTERS, 1), dtype=np.int)
         self.in_this_position.fill(self.VALUE_IF_UNKNOWN)
 
+    def copy(self):
+        li = LettersIncluded()
+        li.copies_of_this_letter = self.copies_of_this_letter.copy()
+        li.could_be_more_copies = self.could_be_more_copies.copy()
+        li.in_this_position = self.in_this_position.copy()
+        return li
+
     def record_guess(self, guess, result_array):
         # need to add first all the green letters, then all the yellow letters, then the gray letters.
         copies_of_this_letter_this_guess = np.zeros((w.Wordle.NUM_LETTERS, 1), np.int)

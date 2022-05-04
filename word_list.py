@@ -40,6 +40,7 @@ class WordList:
         matching_indices = (criteria_1 & criteria_2)
         if save_result:
             self.matching_indices = matching_indices  # save this for future questions about this list
+            self.letters_included = letters_included
         return matching_indices
 
     def get_matching_words(self):
@@ -58,25 +59,27 @@ class WordList:
             num_matching_words = len(matching_words)
             entropy_sums = np.zeros(num_matching_words, np.float)
             for word_index in range(num_matching_words):
-                guess = matching_words[word_index]
-                for result_number in num_possible_results:
+                guess = matching_words[word_index].astype('U13')
+                print(f'calculating entropy for guess {guess}, {word_index}/{num_matching_words}')
+                for result_number in range(num_possible_results):
                     r = result_number
-                    result_array = [] * w.Wordle.WORD_LENGTH
+                    result_array = [None for x in range(w.Wordle.WORD_LENGTH)] # blank array
                     for i in range(w.Wordle.WORD_LENGTH):
                         r, result_array[i] = divmod(r, 3)
-                    li = letters_included.LettersIncluded()
+                    #li = letters_included.LettersIncluded()
+                    li = self.letters_included.copy()  # need a deep copy of this
                     li.record_guess(guess, result_array)
                     matching_indices = self.apply_filters(li, False)
-                    prob = len(matching_indices) / num_matching_words
+                    prob = len(self.words[matching_indices]) / num_matching_words
                     if prob > 0 and prob < 1:
                         entropy_sums[word_index] -= prob * math.log2(prob)
             ordered_indices = np.argsort(entropy_sums)
             low = entropy_sums[ordered_indices[0]]
             high = entropy_sums[ordered_indices[-1]]
-            top_indices = ordered_indices[-1 * num_guesses, :]
+            top_indices = np.flip(ordered_indices[-1 * num_guesses :]) # top indices, reordered so highest entropy is first
             scores = entropy_sums[top_indices]
             suggested_guess_scores = self.convert_to_percentage_scale(scores, high, low)
-            suggested_guesses = matching_words[top_indices]
+            suggested_guesses = matching_words[top_indices].astype('U13')
             return suggested_guesses, suggested_guess_scores
         else:
             matching_rows_of_word_array = self.word_array[:, :, self.matching_indices]
