@@ -57,6 +57,14 @@ class WordList:
         elif suggested_guess_type == w.SuggestedGuessType.ENTROPY:
             num_possible_results = 3**w.Wordle.WORD_LENGTH
             num_matching_words = len(matching_words)
+
+            if num_matching_words == len(self.words):
+                # we're just starting the game.
+                # it takes a while to calculate entropy for the entire word list, so just return canned answer
+                suggested_guesses = ['raise', 'slate', 'crate', 'irate', 'trace']
+                scores = [5.87830296, 5.85581924, 5.83521598, 5.83279888, 5.83042911]
+                return suggested_guesses, scores
+
             entropy_sums = np.zeros(num_matching_words, np.float)
             num_groups = np.zeros(num_matching_words, np.int)
             biggest_group = np.zeros(num_matching_words, np.int)
@@ -98,6 +106,7 @@ class WordList:
 
             suggested_guesses = matching_words[top_indices].astype('U13')
             print(f'Suggested guesses: {suggested_guesses}')
+            print(f'Entropy scores: {scores}')
             print(f'Num groups: {num_groups[top_indices]}')
             print(f'Biggest groups: {biggest_group[top_indices]}')
             return suggested_guesses, scores
