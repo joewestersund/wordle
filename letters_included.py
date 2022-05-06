@@ -1,6 +1,9 @@
 import numpy as np
 import wordle as w
 
+class ImpossibleResultError(Exception):
+    pass
+
 class LettersIncluded:
     VALUE_IF_UNKNOWN = -1
 
@@ -36,11 +39,27 @@ class LettersIncluded:
             letter_index = w.Wordle.character_index(guess[i])
             if result_array[i] == w.LetterResultCode.YELLOW:
                 copies_of_this_letter_this_guess[letter_index] += 1
+                if self.in_this_position[i, letter_index] == 1:
+                    raise ImpossibleResultError
                 self.in_this_position[i, letter_index] = 0  # this letter is definitely not here
         for i in range(w.Wordle.WORD_LENGTH):
             letter_index = w.Wordle.character_index(guess[i])
             if result_array[i] == w.LetterResultCode.GRAY:
                 self.could_be_more_copies[letter_index] = False  # there aren't additional copies of this letter, or this would be yellow.
+                if self.in_this_position[i, letter_index] == 1:
+                    raise ImpossibleResultError
                 self.in_this_position[i, letter_index] = 0  # this letter is definitely not here
+                if self.copies_of_this_letter[letter_index][0] > copies_of_this_letter_this_guess[letter_index][0]:
+                    # this letter wouldn't be gray if it's in the word
+                    raise ImpossibleResultError
+        for i in range(0, w.Wordle.WORD_LENGTH):
+            # check for words with multiple copies of same letter, with earlier copy gray and later copy yellow.
+            letter_index1 = w.Wordle.character_index(guess[i])
+            if result_array[i] == w.LetterResultCode.GRAY:
+                for j in range (i+1, w.Wordle.WORD_LENGTH):
+                    letter_index2 = w.Wordle.character_index(guess[j])
+                    if letter_index1 == letter_index2 and result_array[j] == w.LetterResultCode.YELLOW:
+                        # can't have a gray for one letter, and then a yellow for that same letter later.
+                        raise ImpossibleResultError
         indices_to_update = (copies_of_this_letter_this_guess > self.copies_of_this_letter)
         self.copies_of_this_letter[indices_to_update] = copies_of_this_letter_this_guess[indices_to_update]

@@ -58,29 +58,49 @@ class WordList:
             num_possible_results = 3**w.Wordle.WORD_LENGTH
             num_matching_words = len(matching_words)
             entropy_sums = np.zeros(num_matching_words, np.float)
+            num_groups = np.zeros(num_matching_words, np.int)
+            biggest_group = np.zeros(num_matching_words, np.int)
             for word_index in range(num_matching_words):
                 guess = matching_words[word_index].astype('U13')
-                print(f'calculating entropy for guess {guess}, {word_index}/{num_matching_words}')
+                divisor, remainder = divmod(word_index,10)
+                if remainder == 0:
+                    print(f'calculating entropy for guess {guess}, {word_index + 1}/{num_matching_words}')
                 for result_number in range(num_possible_results):
                     r = result_number
                     result_array = [None for x in range(w.Wordle.WORD_LENGTH)] # blank array
                     for i in range(w.Wordle.WORD_LENGTH):
                         r, result_array[i] = divmod(r, 3)
-                    #li = letters_included.LettersIncluded()
-                    li = self.letters_included.copy()  # need a deep copy of this
-                    li.record_guess(guess, result_array)
+                    li = self.letters_included.copy()  # deep copy of this object
+                    try:
+                        li.record_guess(guess, result_array)
+                    except letters_included.ImpossibleResultError:
+                        # this result isn't possible given previous info and this guess.
+                        # try the next result_number
+                        continue
                     matching_indices = self.apply_filters(li, False)
-                    prob = len(self.words[matching_indices]) / num_matching_words
+                    num_matching_this_result = len(self.words[matching_indices])
+                    if num_matching_this_result > 0:
+                        num_groups[word_index] += 1
+                        if num_matching_this_result > biggest_group[word_index]:
+                            biggest_group[word_index] = max(biggest_group[word_index], num_matching_this_result)
+                    prob = num_matching_this_result / num_matching_words
                     if prob > 0 and prob < 1:
                         entropy_sums[word_index] -= prob * math.log2(prob)
             ordered_indices = np.argsort(entropy_sums)
-            low = entropy_sums[ordered_indices[0]]
-            high = entropy_sums[ordered_indices[-1]]
             top_indices = np.flip(ordered_indices[-1 * num_guesses :]) # top indices, reordered so highest entropy is first
             scores = entropy_sums[top_indices]
-            suggested_guess_scores = self.convert_to_percentage_scale(scores, high, low)
+
+            convert_to_percent = False
+            if convert_to_percent:
+                low = entropy_sums[ordered_indices[0]]
+                high = entropy_sums[ordered_indices[-1]]
+                scores = self.convert_to_percentage_scale(scores, high, low)
+
             suggested_guesses = matching_words[top_indices].astype('U13')
-            return suggested_guesses, suggested_guess_scores
+            print(f'Suggested guesses: {suggested_guesses}')
+            print(f'Num groups: {num_groups[top_indices]}')
+            print(f'Biggest groups: {biggest_group[top_indices]}')
+            return suggested_guesses, scores
         else:
             matching_rows_of_word_array = self.word_array[:, :, self.matching_indices]
             num_guesses_to_return = min(len(matching_rows_of_word_array), num_guesses)

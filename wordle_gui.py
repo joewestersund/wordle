@@ -58,11 +58,11 @@ class WordleGUI:
             self.set_focus(new_row,0)
 
     def set_buttons_enabled(self, row):
-        print(f'setting buttons enabled for row {row}')
+        #print(f'setting buttons enabled for row {row}')
         guess, result_array = self.get_guess_and_result()
-        print(f'guess = {guess}, result_array = {result_array}')
+        #print(f'guess = {guess}, result_array = {result_array}')
         is_valid = self.guess_and_result_valid(guess, result_array)
-        print(f'is_valid = {is_valid}')
+        #print(f'is_valid = {is_valid}')
         if is_valid:
             self.buttons[row].config(state='normal')  #grid()  # show
         else:
